@@ -6,7 +6,11 @@ import (
 	"gopkg.in/mgo.v2"
     "gopkg.in/mgo.v2/bson"
     "os"
+    "html"
     "log"
+    "net/http"
+    //"strings"
+    "encoding/json"
 )
 
 
@@ -64,10 +68,34 @@ func ConnectToMongoDB() *mgo.Session {
 }
 
 func main() {
-		
+
 	sess := ConnectToMongoDB()
 	defer sess.Close()
 	sess.SetSafe(&mgo.Safe{})
+
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    	fmt.Fprintf(w, "Hello, ", html.EscapeString(r.URL.Path))
+    })
+
+    http.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+
+    	result := User{}
+
+    	result = FindUserBy(bson.M{"_first_name" : "Leonel"}, sess)
+
+	    j, err := json.Marshal(result)
+	    
+	    if err != nil {
+        	log.Fatal(err)
+    	}
+
+    	fmt.Fprintf(w, string(j))
+    })
+
+    log.Fatal(http.ListenAndServe(":8080", nil))
+
+		
+	
 	
 
 	user := &User{}
@@ -79,10 +107,6 @@ func main() {
 
 	//InsertUser(user, sess)
 
-    result := User{}
-
-    result = FindUserBy(bson.M{"_first_name" : "Leonel"}, sess)
-
-    fmt.Println("User age:", result.Age)
+    
 
 }
