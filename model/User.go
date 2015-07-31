@@ -13,11 +13,11 @@ import (
 //////////////////////////////////////////////////////////////////////////////
 
 type User struct {
-	Id         bson.ObjectId  `bson:"_id,omitempty"`         
-	FirstName  string         `bson:"_first_name"` 
-	LastName   string         `bson:"_last_name"`  
-	Age        int            `bson:"_age"`        
-	Details    []string       `bson:"_details"`     
+	Id         bson.ObjectId `json:"_id,omitempty" bson:"_id,omitempty"`         
+	FirstName  string        `json:"_first_name"   bson:"_first_name"` 
+	LastName   string        `json:"_last_name"    bson:"_last_name"`  
+	Age        int           `json:"_age"          bson:"_age"`        
+	Details    []string      `json:"_details"      bson:"_details"`     
 }
 
 

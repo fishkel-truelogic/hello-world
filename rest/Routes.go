@@ -66,7 +66,7 @@ func InitRouter() {
             rest.GetUserById,
         }, 
 
-       /* Route{
+       Route{
             "post_user",
             "POST",
             paths["post_user"],
@@ -77,15 +77,15 @@ func InitRouter() {
             "user",
             "PUT",
             paths["put_user"],
-            rest.CreateUser,
+            rest.UpdateUser,
         },
 
         Route{
             "delete_user",
             "DELETE",
             paths["delete_user"],
-            rest.CreateUser,
-        },*/
+            rest.DeleteUser,
+        },
     }
 }
 

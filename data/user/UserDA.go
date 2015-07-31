@@ -31,6 +31,17 @@ func InsertUser(user model.User) {
 
 }
 
+func UpdateUser(user model.User) {
+    collection := mdb.GetSession().DB("test").C("foo")
+
+    err := collection.Update(bson.M{"_id": user.Id}, user)
+
+    if err != nil {
+        fmt.Printf("Can't update user: %v\n", err)
+        os.Exit(1)
+    }
+}
+
 func FindOneBy(filter bson.M) model.User {
 
 	result := model.User{}
@@ -57,4 +68,13 @@ func FindUsers(filter bson.M) []model.User {
 
     return result
 
+}
+
+func RemoveUser(filter bson.M) error {
+    err := mdb.GetSession().DB("test").C("foo").Remove(filter)
+    if err != nil {
+        log.Fatal(err)
+        return err
+    }
+    return nil
 }

@@ -68,15 +68,14 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("------------------ CreateUser ------------------")
 	
-	body := getBody(r)
-
 	user := model.User{}
 
-	err := bson.Unmarshal(body, &user)
-	
-	if err != nil {
-		log.Fatal(err)
-	}
+	decoder := json.NewDecoder(r.Body)
+     
+    err := decoder.Decode(&user)
+    if err != nil {
+        log.Fatal(err)
+    }
 
 	user.Id = bson.NewObjectId()
 
@@ -89,6 +88,62 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, string(j))
+}
+
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("------------------ UpdateUser ------------------")
+	
+
+	vars := mux.Vars(r)
+	if bson.IsObjectIdHex(vars["id"]) {
+
+	    id := bson.ObjectIdHex(vars["id"])
+		user := model.User{}
+
+		decoder := json.NewDecoder(r.Body)
+	     
+	    err := decoder.Decode(&user)
+	    if err != nil {
+	        log.Fatal(err)
+	    }
+
+		user.Id = id
+
+		data.UpdateUser(user)
+
+	    j, err := json.Marshal(user)
+	    
+	    if err != nil {
+	    	log.Fatal(err)
+		}
+
+		fmt.Fprintf(w, string(j))
+
+	} else {
+		fmt.Fprintf(w, "Bad request")
+	}
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("------------------ DeleteUser ------------------")
+	
+	vars := mux.Vars(r)
+	if bson.IsObjectIdHex(vars["id"]) {
+
+	    id := bson.ObjectIdHex(vars["id"])
+
+		err := data.RemoveUser(bson.M{"_id" : id})
+
+	    if err != nil {
+	    	log.Fatal(err)
+	    	fmt.Fprintf(w, "error")
+		} else {
+			fmt.Fprintf(w, "deleted")
+		}
+
+	} else {
+		fmt.Fprintf(w, "Bad request")
+	}
 }
 
 
@@ -116,39 +171,21 @@ func userQueryParams(r *http.Request) bson.M {
 	if firstname != "" {
 		filter["_first_name"] = firstname
 		fmt.Println(firstname)
-
 	}
 	
 	age := r.Form.Get("age")
 	if age != "" {
 		filter["_age"] = strToInt(age)
 		fmt.Println(age)
-
 	}
 	
 	lastname := r.Form.Get("lastname")
 	if lastname != "" {
 		filter["_last_name"] = lastname
 		fmt.Println(lastname)
-
 	}
 
 	return filter
-}
-
-
-func getBody(r *http.Request) []byte {
-	
-	r.ParseForm()
-	fmt.Println(r)
-	resp := []byte{}
-
-	for k, _ := range r.PostForm {
-		fmt.Println(k)
-		resp = []byte(k)
-	}
-	return resp
-
 }
 
 
