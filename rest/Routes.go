@@ -8,6 +8,7 @@ import (
     "net/http"
     "github.com/gorilla/mux"
     "hello-world/rest/user"
+    "hello-world/rest/note"
     "hello-world/utils"
 )
 
@@ -38,6 +39,13 @@ func InitRouter() {
     paths["post_user"]="/user"
     paths["put_user"]="/user/{id}"
     paths["delete_user"]="/user/{id}"
+    paths["get_notes_pub"]="/notes"
+    paths["get_notes_user"]="/notes/{userid}"
+    paths["get_notes_user_pub"]="/notes/pub/{userid}"
+    paths["post_note"]="/note"
+    paths["put_note"]="/note/{id}"
+    paths["delete_note"]="/note/{id}"
+
 
     routes = Routes{
         //////////////////////
@@ -56,35 +64,77 @@ func InitRouter() {
             "get_users",
             "GET",
             paths["get_users"],
-            rest.GetAllUsers,
+            restUser.GetAllUsers,
         },
         
         Route{
             "get_user",
             "GET",
             paths["get_user"],
-            rest.GetUserById,
+            restUser.GetUserById,
         }, 
 
        Route{
             "post_user",
             "POST",
             paths["post_user"],
-            rest.CreateUser,
+            restUser.CreateUser,
         },
 
         Route{
             "user",
             "PUT",
             paths["put_user"],
-            rest.UpdateUser,
+            restUser.UpdateUser,
         },
 
         Route{
             "delete_user",
             "DELETE",
             paths["delete_user"],
-            rest.DeleteUser,
+            restUser.DeleteUser,
+        },
+
+        Route{
+            "get_notes_pub",
+            "GET",
+            paths["get_notes_pub"],
+            restNote.GetAllPublicNotes,
+        },
+
+        Route{
+            "get_notes_user",
+            "GET",
+            paths["get_notes_user"],
+            restNote.GetAllNotesByUserId,
+        },
+
+        Route{
+            "get_notes_user_pub",
+            "GET",
+            paths["get_notes_user_pub"],
+            restNote.GetPublicNotesByUserId,
+        },
+
+        Route{
+            "post_note",
+            "POST",
+            paths["post_note"],
+            restNote.CreateNote,
+        },
+
+        Route{
+            "put_note",
+            "PUT",
+            paths["put_note"],
+            restNote.UpdateNote,
+        },
+
+        Route{
+            "delete_note",
+            "DELETE",
+            paths["delete_note"],
+            restNote.DeleteNote,
         },
     }
 }

@@ -1,4 +1,4 @@
-package restUser
+package restNote
 
 //////////////////////////////////////////////////////////////////////////////
 // Imports
@@ -11,26 +11,25 @@ import (
     "net/http"
     "encoding/json"
     "github.com/gorilla/mux"
-    "hello-world/data/user"
+    "hello-world/data/note"
     "hello-world/model"
-    "hello-world/utils"
 )
 
 //////////////////////////////////////////////////////////////////////////////
 // Rest API Functions
 //////////////////////////////////////////////////////////////////////////////
 
-func GetUserById(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("------------------ GetUserById ------------------")
+func GetPublicNotesByUserId(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("------------------ GetPublicNotesByUserId ------------------")
 	
 	vars := mux.Vars(r)
-	if bson.IsObjectIdHex(vars["id"]) {
+	if bson.IsObjectIdHex(vars["userid"]) {
 
-	    id := bson.ObjectIdHex(vars["id"])
+	    id := bson.ObjectIdHex(vars["userid"])
 
-		result := model.User{}
+		result := []model.Note{}
 
-		result = data.FindOneBy(bson.M{"_id" : id})
+		result = data.FindNotes(bson.M{"_user_id" : id, "_pri" : false})
 
 	    j, err := json.Marshal(result)
 
@@ -46,14 +45,40 @@ func GetUserById(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("------------------ GetAllUsers ------------------")
+func GetAllNotesByUserId(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("------------------ GetAllNotesByUserId ------------------")
 	
-	filter := userQueryParams(r)
+	vars := mux.Vars(r)
+	if bson.IsObjectIdHex(vars["userid"]) {
 
-	result := []model.User{}
+	    id := bson.ObjectIdHex(vars["userid"])
 
-	result = data.FindUsers(filter)
+		result := []model.Note{}
+
+		result = data.FindNotes(bson.M{"_user_id" : id})
+
+	    j, err := json.Marshal(result)
+
+	    if err != nil {
+	    	log.Fatal(err)
+		}
+
+		fmt.Fprintf(w, string(j))
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+}
+
+func GetAllPublicNotes(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("------------------ GetAllPublicNotes ------------------")
+
+	result := []model.Note{}
+
+	filter := bson.M{"_pri" : "false"}
+
+	result = data.FindNotes(filter)
 
     j, err := json.Marshal(result)
     
@@ -66,27 +91,34 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(j))
 }
 
-func CreateUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("------------------ CreateUser ------------------")
-	fmt.Println(r)
-	fmt.Println("-----------------------------")
-	fmt.Println(r.Body)
-	user := model.User{}
+func CreateNote(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("------------------ CreateNote ------------------")
+	
+	note := model.Note{}
 
+	fmt.Println(r);
+	
 	decoder := json.NewDecoder(r.Body)
      
-    err := decoder.Decode(&user)
+    err := decoder.Decode(&note)
+
     if err != nil {
         log.Fatal(err)
         w.WriteHeader(http.StatusInternalServerError)
     	return
     }
 
-	user.Id = bson.NewObjectId()
+	note.Id = bson.NewObjectId()
 
-	data.InsertUser(user)
+	err = data.InsertNote(note)
+	
+	if err != nil {
+    	w.WriteHeader(http.StatusInternalServerError)
+    	fmt.Fprintf(w, err.Error());
+    	return
+	}
 
-    j, err := json.Marshal(user)
+    j, err := json.Marshal(note)
     
     if err != nil {
     	log.Fatal(err)
@@ -97,30 +129,29 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(j))
 }
 
-func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("------------------ UpdateUser ------------------")
+func UpdateNote(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("------------------ UpdateNote ------------------")
 	
 
 	vars := mux.Vars(r)
 	if bson.IsObjectIdHex(vars["id"]) {
 
 	    id := bson.ObjectIdHex(vars["id"])
-		user := model.User{}
+		note := model.Note{}
 
 		decoder := json.NewDecoder(r.Body)
 	     
-	    err := decoder.Decode(&user)
+	    err := decoder.Decode(&note)
 	    if err != nil {
 	        log.Fatal(err)
 	        w.WriteHeader(http.StatusInternalServerError)
     		return
 	    }
+		note.Id = id
 
-		user.Id = id
+		data.UpdateNote(note)
 
-		data.UpdateUser(user)
-
-	    j, err := json.Marshal(user)
+	    j, err := json.Marshal(note)
 	    
 	    if err != nil {
 	    	log.Fatal(err)
@@ -136,15 +167,15 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("------------------ DeleteUser ------------------")
+func DeleteNote(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("------------------ DeleteNote ------------------")
 	
 	vars := mux.Vars(r)
 	if bson.IsObjectIdHex(vars["id"]) {
 
 	    id := bson.ObjectIdHex(vars["id"])
 
-		err := data.RemoveUser(bson.M{"_id" : id})
+		err := data.RemoveNote(bson.M{"_id" : id})
 
 	    if err != nil {
 	    	log.Fatal(err)
@@ -164,32 +195,27 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 //////////////////////////////////////////////////////////////////////////////
 // Util Functions
 //////////////////////////////////////////////////////////////////////////////
-
-func userQueryParams(r *http.Request) bson.M {
+/*
+func noteQueryParams(r *http.Request) bson.M {
 	
 	filter := bson.M{}
 	r.ParseForm()
 	fmt.Println(r)
 	
-	firstname := r.Form.Get("firstname")
-	if firstname != "" {
-		filter["_first_name"] = firstname
-		fmt.Println(firstname)
+	userId := r.Form.Get("userid")
+	if userId != "" {
+		filter["_user_id"] = userId
+		fmt.Println(userId)
 	}
 	
-	age := r.Form.Get("age")
-	if age != "" {
-		filter["_age"] = utils.StrToInt(age)
-		fmt.Println(age)
+	private := r.Form.Get("private")
+	if private != "" {
+		filter["_private"] = private == "true"
+		fmt.Println(private)
 	}
 	
-	lastname := r.Form.Get("lastname")
-	if lastname != "" {
-		filter["_last_name"] = lastname
-		fmt.Println(lastname)
-	}
-
 	return filter
 }
+*/
 
 

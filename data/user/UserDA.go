@@ -6,7 +6,6 @@ package data
 
 import (
 	"fmt"
-	//"gopkg.in/mgo.v2"
     "gopkg.in/mgo.v2/bson"
     "os"
     "log"
@@ -20,7 +19,7 @@ import (
 
 func InsertUser(user model.User) {
 
-	collection := mdb.GetSession().DB("test").C("foo")
+	collection := mdb.GetSession().DB("notes").C("user")
 
 	err := collection.Insert(user)
 
@@ -32,7 +31,7 @@ func InsertUser(user model.User) {
 }
 
 func UpdateUser(user model.User) {
-    collection := mdb.GetSession().DB("test").C("foo")
+    collection := mdb.GetSession().DB("notes").C("user")
 
     err := collection.Update(bson.M{"_id": user.Id}, user)
 
@@ -46,7 +45,7 @@ func FindOneBy(filter bson.M) model.User {
 
 	result := model.User{}
 
-    err := mdb.GetSession().DB("test").C("foo").Find(filter).One(&result)
+    err := mdb.GetSession().DB("notes").C("user").Find(filter).One(&result)
 
     if err != nil {
         log.Fatal(err)
@@ -60,7 +59,7 @@ func FindUsers(filter bson.M) []model.User {
 
 	result := []model.User{}
 
-    err := mdb.GetSession().DB("test").C("foo").Find(filter).All(&result)
+    err := mdb.GetSession().DB("notes").C("user").Find(filter).All(&result)
 
     if err != nil {
         log.Fatal(err)
@@ -71,7 +70,7 @@ func FindUsers(filter bson.M) []model.User {
 }
 
 func RemoveUser(filter bson.M) error {
-    err := mdb.GetSession().DB("test").C("foo").Remove(filter)
+    err := mdb.GetSession().DB("notes").C("user").Remove(filter)
     if err != nil {
         log.Fatal(err)
         return err

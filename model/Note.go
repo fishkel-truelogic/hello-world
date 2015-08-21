@@ -12,12 +12,13 @@ import (
 // Types
 //////////////////////////////////////////////////////////////////////////////
 
-type User struct {
-	Id         bson.ObjectId `json:"_id,omitempty" bson:"_id,omitempty"`         
-	FirstName  string        `json:"_first_name" bson:"_first_name"` 
-	LastName   string        `json:"_last_name" bson:"_last_name"`  
-	Age        int           `json:"_age" bson:"_age"`        
-	Details    []string      `json:"_details" bson:"_details"`     
+type Note struct {
+
+	Id 			bson.ObjectId `json:"id,omitempty" bson:"_id,omitempty"`   
+	
+	UserId 		bson.ObjectId `json:"userid" bson:"_user_id"`      
+	
+	noteContent string 		  `json:"notecontent" bson:"_note_content"`
+	
+	pri 		bool 		  `json:"pri" bson:"_pri"`
 }
-
-
